@@ -1071,22 +1071,33 @@ $(window).on("load", function () {
     $('#contact-form').on('submit', function (e) {
         if (!e.isDefaultPrevented()) {
             var url = "contact.php";
+            var $form = $(this);
 
             $.ajax({
                 type: "POST",
                 url: url,
-                data: $(this).serialize(),
-                success: function (data) {
-                    var messageAlert = 'alert-' + data.type;
-                    var messageText = data.message;
+                data: $form.serialize(),
+                dataType: "json"
+            }).done(function (data) {
+                var isSuccess = !!data.success;
+                var messageAlert = isSuccess ? 'alert-success' : 'alert-danger';
+                var messageText = data.message || 'ارسال پیام با خطا مواجه شد.';
 
-                    var alertBox = '<div class="alert ' + messageAlert + ' alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + messageText + '</div>';
-                    if (messageAlert && messageText) {
-                        $('#contact-form').find('.messages').html(alertBox);
-                        $('#contact-form')[0].reset();
-                    }
+                var alertBox = '<div class="alert ' + messageAlert + ' alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + messageText + '</div>';
+
+                $form.find('.messages').html(alertBox);
+
+                if (isSuccess) {
+                    $form[0].reset();
                 }
+            }).fail(function (xhr) {
+                var data = xhr.responseJSON || {};
+                var messageText = data.message || 'خطای ارتباط با سرور. دوباره تلاش کنید.';
+                var alertBox = '<div class="alert alert-danger alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + messageText + '</div>';
+
+                $form.find('.messages').html(alertBox);
             });
+
             return false;
         }
     });
